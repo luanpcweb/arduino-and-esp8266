@@ -1,0 +1,54 @@
+<a class="buttons ligar">Ligar</a>
+<a class="buttons desligar">Desligar</a>
+<br><br>
+
+<a class="buttons status">Status</a>
+
+<br><br>
+
+<div id="status"></div>
+
+<script type="text/javascript">
+
+        // Realiza um disparo via Ajax para o endereço do meu NodeMcu
+        var led_controle = function(status) {
+            var xmlhttp = new XMLHttpRequest();
+            var set_status = "http://192.168.3.45/?function=" + status;
+            xmlhttp.open("GET", set_status);
+            xmlhttp.send();
+        }
+
+        var led_status = function(status) {
+            var xmlhttp = new XMLHttpRequest();
+            var set_status = "http://192.168.3.45/?function=led5_status";
+            xmlhttp.open("GET", set_status);
+            xmlhttp.send();
+            var body = xmlhttp.response;
+            console.log(body);
+        }
+
+        // Acessa os botões e passando as nossas diretivas de ligar ou desligar o led
+        var led = function() {
+
+            var ligar = document.querySelector(".ligar");
+            ligar.onclick = function() {
+                led_controle("led5_on");
+            }
+
+            var desligar = document.querySelector(".desligar");
+                desligar.onclick = function() {
+                led_controle("led5_off");
+            }
+
+            var desligar = document.querySelector(".status");
+                desligar.onclick = function() {
+                led_controle("led5_status");
+            }
+        }
+
+        window.onload = function() {
+            // Chama a função led
+            led();
+        }
+
+</script>
