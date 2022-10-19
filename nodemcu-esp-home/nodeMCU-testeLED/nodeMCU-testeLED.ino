@@ -1,13 +1,22 @@
 #include <ESP8266WiFi.h>
 
 // Nome do seu wifi
-const char* ssid = "BTL-700"; 
+const char* ssid = "BTL"; 
 
 // Senha do seu wifi
-const char* password = "@@##sapao200#"; 
+const char* password = "#Brasil2020"; 
 
 // Porta de comunicacao (normalmente se utiliza a 80 ou 8080)
 WiFiServer server(80); 
+
+// Set your Static IP address
+IPAddress local_IP(192, 168, 3, 10);
+// Set your Gateway IP address
+IPAddress gateway(192, 168, 3, 1);
+
+IPAddress subnet(255, 255, 255, 0);
+IPAddress primaryDNS(8, 8, 8, 8);   //optional
+IPAddress secondaryDNS(8, 8, 4, 4); //optional
 
 int val = 0; 
 
@@ -24,6 +33,11 @@ void setup() {
   Serial.println();
   Serial.print("conectando em ");
   Serial.println(ssid);
+
+  // Configures static IP address
+  if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
+    Serial.println("STA Failed to configure");
+  }
   
   // Inicializando a conexao
   WiFi.begin(ssid, password); 

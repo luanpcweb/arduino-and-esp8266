@@ -13,14 +13,14 @@
         // Realiza um disparo via Ajax para o endereço do meu NodeMcu
         var led_controle = function(status) {
             var xmlhttp = new XMLHttpRequest();
-            var set_status = "http://192.168.3.45/?function=" + status;
+            var set_status = "http://192.168.3.10/?function=" + status;
             xmlhttp.open("GET", set_status);
             xmlhttp.send();
         }
 
         var led_status = function(status) {
             var xmlhttp = new XMLHttpRequest();
-            var set_status = "http://192.168.3.45/?function=led5_status";
+            var set_status = "http://192.168.3.10/?function=led5_status";
             xmlhttp.open("GET", set_status);
             xmlhttp.send();
             var body = xmlhttp.response;
