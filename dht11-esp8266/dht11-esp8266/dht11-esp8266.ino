@@ -1,74 +1,121 @@
-// Example testing sketch for various DHT humidity/temperature sensors
-// Written by ladyada, public domain
-
-// REQUIRES the following Arduino libraries:
-// - DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
-// - Adafruit Unified Sensor Lib: https://github.com/adafruit/Adafruit_Sensor
+#include "ESP8266WiFi.h"
 
 #include "DHT.h"
 
-#define DHTPIN 2     // Digital pin connected to the DHT sensor
-// Feather HUZZAH ESP8266 note: use pins 3, 4, 5, 12, 13 or 14 --
-// Pin 15 can work but DHT must be disconnected during program upload.
+#define DHTPIN 2
 
-// Uncomment whatever type you're using!
-#define DHTTYPE DHT11   // DHT 11
-//#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
-//#define DHTTYPE DHT21   // DHT 21 (AM2301)
+#define DHTTYPE DHT11
 
-// Connect pin 1 (on the left) of the sensor to +5V
-// NOTE: If using a board with 3.3V logic like an Arduino Due connect pin 1
-// to 3.3V instead of 5V!
-// Connect pin 2 of the sensor to whatever your DHTPIN is
-// Connect pin 3 (on the right) of the sensor to GROUND (if your sensor has 3 pins)
-// Connect pin 4 (on the right) of the sensor to GROUND and leave the pin 3 EMPTY (if your sensor has 4 pins)
-// Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
+const char* ssid = "V##"; //Enter SSID
+const char* password = "###"; //Enter Password
 
-// Initialize DHT sensor.
-// Note that older versions of this library took an optional third parameter to
-// tweak the timings for faster processors.  This parameter is no longer needed
-// as the current DHT reading algorithm adjusts itself to work on faster procs.
+WiFiServer server(80); 
+
 DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
-  Serial.begin(9600);
-  Serial.println(F("DHTxx test!"));
+  Serial.begin(115200);
+
+  // Connect to WiFi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+     delay(500);
+     Serial.print("*");
+  }
+
+  server.begin();
+  Serial.println("Servidor inicializado");
+  
+  Serial.println("");
+  Serial.println("WiFi connection Successful");
+  Serial.print("The IP Address of ESP8266 Module is: ");
+  Serial.print(WiFi.localIP());// Print the IP address
 
   dht.begin();
+
 }
 
 void loop() {
-  // Wait a few seconds between measurements.
-  delay(2000);
 
-  // Reading temperature or humidity takes about 250 milliseconds!
-  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-  float h = dht.readHumidity();
-  // Read temperature as Celsius (the default)
-  float t = dht.readTemperature();
-  // Read temperature as Fahrenheit (isFahrenheit = true)
-  float f = dht.readTemperature(true);
-
-  // Check if any reads failed and exit early (to try again).
-  if (isnan(h) || isnan(t) || isnan(f)) {
-    Serial.println(F("Failed to read from DHT sensor!"));
+  WiFiClient client = server.available(); 
+  if ( ! client) {
     return;
   }
 
-  // Compute heat index in Fahrenheit (the default)
-  float hif = dht.computeHeatIndex(f, h);
-  // Compute heat index in Celsius (isFahreheit = false)
-  float hic = dht.computeHeatIndex(t, h, false);
+  // Quando estiver alguem acessando 
+  Serial.println("New Client"); 
+  
+  // Enquanto nao tiver cliente
+  while ( ! client.available()) { 
+    delay(1);
+  }
 
-  Serial.print(F("Humidity: "));
-  Serial.print(h);
-  Serial.print(F("%  Temperature: "));
-  Serial.print(t);
-  Serial.print(F("°C "));
-  Serial.print(f);
-  Serial.print(F("°F  Heat index: "));
-  Serial.print(hic);
-  Serial.print(F("°C "));
-  Serial.print(hif);
-  Serial.println(F("°F"));
+  // Lê caracteres do buffer serial
+  String req = client.readStringUntil('\r');
+  Serial.println(req);
+  client.flush();
+
+
+  if (req.indexOf("WATHER-AAX") != -1) {
+    
+        // Reading temperature or humidity takes about 250 milliseconds!
+        // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+        float h = dht.readHumidity();
+        // Read temperature as Celsius (the default)
+        float t = dht.readTemperature();
+        // Read temperature as Fahrenheit (isFahrenheit = true)
+        float f = dht.readTemperature(true);
+      
+        // Check if any reads failed and exit early (to try again).
+        if (isnan(h) || isnan(t) || isnan(f)) {
+          Serial.println(F("Failed to read from DHT sensor!"));
+          
+          client.print("HTTP/1.1 500 Internal Server Error\r\n");
+          client.print("Access-Control-Allow-Origin: *");
+          client.print("\r\n\r\n");
+          client.print("INTERNAL-SERVER-ERROR");
+          
+          return;
+        }
+      
+        // Compute heat index in Fahrenheit (the default)
+        float hif = dht.computeHeatIndex(f, h);
+        // Compute heat index in Celsius (isFahreheit = false)
+        float hic = dht.computeHeatIndex(t, h, false);
+      
+        Serial.print(F("Humidity: "));
+        Serial.print(h);
+        Serial.print(F("%  Temperature: "));
+        Serial.print(t);
+        Serial.print(F("°C "));
+        Serial.print(f);
+        Serial.print(F("°F  Heat index: "));
+        Serial.print(hic);
+        Serial.print(F("°C "));
+        Serial.print(hif);
+        Serial.println(F("°F"));
+
+        client.print("HTTP/1.1 200 OK\r\n");
+        client.print("Access-Control-Allow-Origin: *");
+        client.print("\r\n\r\n");
+        client.print("H:");
+        client.print(h);
+        client.print("|");
+        client.print("TEMPC:");
+        client.print(t);
+        client.print("|");
+        client.print("HIC:");
+        client.print(hic);
+
+        return;
+  } 
+
+  Serial.println("Cliente desconectado");
+
+  client.print("HTTP/1.1 404 Not Found\r\n");
+  client.print("Access-Control-Allow-Origin: *");
+  client.print("\r\n\r\n");
+  client.print("HTTP-NOTFOUND");
+
 }
