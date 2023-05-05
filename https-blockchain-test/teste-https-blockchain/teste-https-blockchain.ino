@@ -13,24 +13,36 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 void setup() {
-  Serial.begin(115200);
-  Serial.println(F("\n\r* * * ESP BOOT * * *"));
-  Serial.println(F("WiFi begin!"));
-  WiFi.mode(WIFI_STA);
-  WiFi.begin("BTL", "#Brasil2020");
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println(F("\n\rWiFi connected!"));
-
-  
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
     Serial.println(F("SSD1306 allocation failed"));
     for(;;);
   }
+
+  printStartData("Starting....");
+  delay(1000);
+  
+
+  String wifiName = "Vodafone";
+  String wifiPassword = "";
+  
+  Serial.begin(115200);
+  Serial.println(F("\n\r* * * ESP BOOT * * *"));
+  Serial.println(F("WiFi begin!"));
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(wifiName, wifiPassword);
+
+  printStartData("Wifi: " + wifiName);
+
+  String dot = ".";
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    fillDisplay();
+    Serial.print(dot);
+  }
+
+  Serial.println(F("\n\rWiFi connected!"));
+  printStartData("WiFi connected!");
 }
 
 String data;
@@ -72,6 +84,31 @@ void getpr24h() {
   }
 }
 
+
+void fillDisplay(void) {
+
+  display.clearDisplay();
+  for (int j = 0; j < 63; j++) {
+    for (int i = 0; i < 127; i++) {
+      display.drawPixel(i, j, WHITE);
+    }
+    display.display();
+    delay(2);
+  }
+} 
+
+void printStartData(String data)
+{
+  //delay(2000);
+  display.clearDisplay();
+
+  display.setTextSize(1.9);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 5);
+  display.println(data);
+
+  display.display(); 
+}
 
 void printData(String data)
 {
