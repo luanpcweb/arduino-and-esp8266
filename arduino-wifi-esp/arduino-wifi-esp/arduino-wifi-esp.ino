@@ -95,7 +95,7 @@ void wifi_init()
       if(!No_IP)
       {
         Serial.println("Connecting Wifi....");
-        connect_wifi("AT+CWJAP=\"BTL\",\"#Brasil2020\"",7000);
+        connect_wifi("AT+CWJAP=\"BTL\",\"#Teste102030\"",7000);
         // connect_wifi("AT+CWJAP=\"vpn address\",\"wireless network\"",7000);
       }
       else

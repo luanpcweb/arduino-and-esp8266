@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RASPBERRY</title>
+
+    <!-- <link rel="stylesheet"type="text/css" href="/path/to/jquery.easy-pie-chart.css"> -->
+    <style>
+
+      * {
+          margin: 0;
+          padding: 0;
+          font-family: 'Arial'
+      }
+
+      .base {
+          width: 480px; 
+          height: 320px;
+          background-color: #000;
+      }
+
+      .container {
+        display: flex;
+      }
+
+      .row {
+        width: 33%;
+        min-height: 100px;
+        display: block;
+        /* padding: 10px; */
+        background-color: #FFF;
+        margin: 4px;
+        border-radius: 3px;
+        position: relative;
+      }
+
+      .row > p {
+          padding-top: 4px;
+          display: flex;
+          font-size: 0.8em;
+          color: #888;
+          justify-content: center;
+      }
+
+      .text {
+        color: #323232;
+        font-size: 0.9em;
+        margin-left: 12px;
+      }
+
+      /* ------ Default Style ---------- */
+      .gauge-container {
+        
+      }
+
+      .gauge-container > .gauge .dial {
+        stroke: #334455;
+        stroke-width: 2;
+        fill: rgba(0,0,0,0);
+      }
+
+      .gauge-container > .gauge .value {
+        stroke: rgb(47, 227, 255);
+        stroke-width: 2;
+        fill: rgba(0,0,0,0);
+      }
+
+      .gauge-container > .gauge .value-text {
+        fill: rgb(47, 227, 255);
+        font-family: sans-serif;
+        font-weight: bold;
+        font-size: 0.8em;
+      }
+
+      /* .gauge-container.two {
+        height: 150px;
+      } */
+
+      .two > .gauge {
+        width: 100%;
+        height: 100px;
+      }
+
+      .gauge-container.two > .gauge .dial {
+        stroke: #b8c2cc;
+        stroke-width: 10;
+      }
+
+      .gauge-container.two > .gauge .value {
+        stroke: orange;
+        stroke-dasharray: none;
+        stroke-width: 13;
+      }
+
+      .gauge-container.two > .gauge .value-text {
+        fill: #ccc;
+        font-weight: 100;
+        font-size: 1em;
+      }
+
+      /* ------- Alternate Style ------- */
+      .gauge-container.three {
+      }
+      
+      .gauge-container.three > .gauge .dial {
+        stroke: #b8c2cc;
+        stroke-width: 6;
+      }
+
+      .gauge-container.three > .gauge .value {
+        stroke: #07213c;
+        stroke-width: 8;
+        fill: rgba(0,0,0,0);
+      }
+
+      .gauge-container.three > .gauge .value-text {
+        fill: #ccc;
+        font-weight: 100;
+        font-size: 1em;
+      }
+      
+/* 
+      .gauge-container.three > .gauge .value {
+        stroke: #C9DE3C;
+        stroke-width: 5;
+      }
+
+      .gauge-container.three > .gauge .value-text {
+        fill: #C9DE3C;
+      }  */
+
+      /* ----- Alternate Style ----- */
+      /* .gauge-container.four > .gauge .dial {
+        stroke: #334455;
+        stroke-width: 10;
+      }
+      .gauge-container.four > .gauge .value {
+        stroke: #F32450;
+        stroke-dasharray: none;
+        stroke-width: 10;
+      }
+      .gauge-container.four > .gauge .value-text {
+        fill: #F32450;
+        transform: translate3d(26%, 20%, 0);
+        display: inline-block;
+      }
+      .gauge-container.four .value-text {
+        color: #F32450;
+        font-weight: 100;
+        position: absolute;
+        bottom: 18%;
+        right: 10%;
+        display: inline-block;
+      }  */
+
+      /* ----- Alternate Style ----- */
+      /* .gauge-container.five > .gauge .dial {
+        stroke: #334455;
+        stroke-width: 5;
+      }
+      .gauge-container.five > .gauge .value {
+        stroke: #F8774B;
+        stroke-dasharray: 25 1;
+        stroke-width: 5;
+      }
+      .gauge-container.five > .gauge .value-text {
+        fill: #F8774B;
+        font-size: 0.7em;
+      } */
+
+      /* ----- Alternate Style ----- */
+      /* .gauge-container.six > .gauge .dial {
+        stroke: #334455;
+        fill: "#334455";
+        stroke-width: 20;
+      }
+      .gauge-container.six > .gauge .value {
+        stroke: #FF6DAF;
+        stroke-width: 20;
+      }
+      .gauge-container.six > .gauge .value-text {
+        fill: #FF6DAF;
+        font-size: 0.7em;
+      }
+
+      .gauge-container.seven > .gauge .dial {
+        stroke: transparent;
+        stroke-width: 5;
+        transform: scale(0.9,0.9) translate3d(5.5px, 5.5px, 0);
+        fill: rgba(148, 112, 57, 0.42);
+      }
+      .gauge-container.seven > .gauge .value {
+        stroke: #F8774B;
+        stroke-dasharray: none;
+        stroke-width: 5;
+      } */
+
+  </style>
+
+
+</head>
+<body>
+    <div class="base">
+      
+      <div class="container">
+        <div class="row">
+          <p>Daily</p>
+          <div id="daily" class="gauge-container three">
+          </div>
+        </div>
+        
+        <div class="row">
+          <p>Month</p>
+          <div id="month" class="gauge-container three">
+          </div>
+        </div>
+        
+        <div class="row">
+          <p style="margin-bottom: 8px;">Informations</p>
+          <!-- <div id="gauge4" class="gauge-container four">
+            <span class="value-text">reqs</span>
+          </div> -->
+
+          <div class="text"><small>IP:</small> <strong>192.168.1.14</strong></div>
+          <div class="text"><small>Hostname:</small> <strong>redplus</strong></div>
+        </div>
+      </div>
+
+      <div class="container">  
+          <div class="row">
+            <p>Temperature</p>
+            <div id="temp" class="gauge-container two">
+            </div>
+          </div>     
+          
+          <div class="row">
+            <p>Usage</p>
+            <div id="usage" class="gauge-container two">
+            </div>
+          </div>
+          
+          <div class="row">
+            <p>Network</p>
+            <div id="network" class="gauge-container two">
+            </div>
+          </div>
+      </div>
+      
+
+
+        <script src="gauge.min.js"></script>
+        <script>
+          var daily = Gauge(
+            document.getElementById("daily"), {
+              max: 100,
+              dialStartAngle: -90,
+              dialEndAngle: -90.001,
+              value: 100,
+              label: function(value) {
+                return Math.round(value * 100) / 100;
+              }
+            }
+          );
+
+          var month = Gauge(
+            document.getElementById("month"), {
+              max: 100,
+              value: 50
+            }
+          );
+
+
+          var temp = Gauge(
+            document.getElementById("temp"), {
+              min: 0,
+              max: 100,
+              dialStartAngle: 180,
+              dialEndAngle: 0,
+              value: 50,
+              color: function(value) {
+                  if(value < -25) {
+                    return "#5ee432";
+                  }else if(value < 0) {
+                    return "#fffa50";
+                  }else if(value < 25) {
+                    return "#f7aa38";
+                  }else {
+                    return "#ef4655";
+                  }
+                }
+            }
+          );
+
+          var usage = Gauge(
+            document.getElementById("usage"), {
+              min: 0,
+              max: 100,
+              dialStartAngle: 180,
+              dialEndAngle: 0,
+              value: 50,
+              color: function(value) {
+                  if(value < -25) {
+                    return "#5ee432";
+                  }else if(value < 0) {
+                    return "#fffa50";
+                  }else if(value < 25) {
+                    return "#f7aa38";
+                  }else {
+                    return "#ef4655";
+                  }
+                }
+            }
+          );
+
+          var network = Gauge(
+            document.getElementById("network"), {
+              min: 0,
+              max: 100,
+              dialStartAngle: 180,
+              dialEndAngle: 0,
+              value: 50,
+              color: function(value) {
+                  if(value < -25) {
+                    return "#5ee432";
+                  }else if(value < 0) {
+                    return "#fffa50";
+                  }else if(value < 25) {
+                    return "#f7aa38";
+                  }else {
+                    return "#ef4655";
+                  }
+                }
+            }
+          );
+
+
+          (function loop() {
+              var value1 = Math.random() * 100,
+                  value2 = Math.random() * 100,
+                  value3 = Math.random() * 100,
+                  value4 = Math.random() * 100;
+
+          
+              daily.setValueAnimated(value1, 1);
+              month.setValueAnimated(value3, 1.5);
+              
+              temp.setValueAnimated(100 - value2, 2);
+              usage.setValueAnimated(100 - value2, 2);
+              network.setValueAnimated(100 - value2, 2);
+              
+            
+              window.setTimeout(loop, 4000);
+          })();
+        </script>
+        
+    </div>
+</body>
+</html>
