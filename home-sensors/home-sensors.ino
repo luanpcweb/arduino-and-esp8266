@@ -6,57 +6,55 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_AHTX0.h>
+#include "env.h"
 
-
-
-const char* ssid = "##"; //Enter SSID
-const char* password = "##"; //Enter Password
+extern const char* ssid;
+extern const char* password;
 
 WiFiServer server(80); 
 
-
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 32 // OLED display height, in pixels
-
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-
-
-Adafruit_AHTX0 aht;
-
-#define BUZZER_PIN D4
-
+#define BUZZER_PIN 2
 #define MQ9_ANALOG A0
 
-int limiarGas = 600; 
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 32
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+Adafruit_AHTX0 aht;
+
+int limiarGas = 500; 
+
+unsigned long lastSensorTime = 0;
+const unsigned long sensorInterval = 2000; // Atualiza a cada 2s
+
+float temperature = 0.0;
+float humidity = 0.0;
+int gasValue = 0;
 
 void setup() {
   Serial.begin(115200);
 
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
-    Serial.println(F("SSD1306 allocation failed"));
-    for(;;);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("Falha ao iniciar o display SSD1306"));
+    while(true);
   }
 
-  // Connect to WiFi
+  fillDisplay();
+
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) 
-  {
-     delay(500);
-     Serial.print("*");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print("*");
   }
 
   server.begin();
   Serial.println("Servidor inicializado");
-  
-  Serial.println("");
-  Serial.println("WiFi connection Successful");
-  Serial.print("The IP Address of ESP8266 Module is: ");
-  Serial.print(WiFi.localIP());// Print the IP address
+  Serial.println("IP: ");
+  Serial.println(WiFi.localIP());
 
   if (!aht.begin()) {
+    Serial.println("Erro ao iniciar o sensor AHT10");
     while (1) {
-      Serial.println("Erro ao iniciar o sensor AHT10");
       delay(1000);
     }
   }
@@ -65,74 +63,84 @@ void setup() {
 
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(MQ9_ANALOG, INPUT);
-}
 
-String data;
-String dataTemp;
+  ESP.wdtEnable(10000); // watchdog de 10s
+}
 
 void loop() {
+  unsigned long currentMillis = millis();
 
-  readTemp();
-  delay(10000);
+  if (currentMillis - lastSensorTime >= sensorInterval) {
+    lastSensorTime = currentMillis;
+    updateSensors();
+    updateDisplay();
+  }
 
-
+  ESP.wdtFeed();
 }
 
-void readGas(){
-
-    int gasValue = analogRead(MQ9_ANALOG);
-    Serial.print("Gas Value: ");
-    Serial.println(gasValue);
-
-    display.clearDisplay();
-    
-    if (gasValue > limiarGas) {
-      Serial.println("Detected gas!");
-      digitalWrite(BUZZER_PIN, HIGH);
-
-      display.setTextSize(2);
-      display.setTextColor(WHITE);
-      display.setCursor(0, 5);
-      display.println("GAS DETECTED");
-    } else {
-
-      display.setTextSize(2);
-      display.setTextColor(WHITE);
-      display.setCursor(0, 5);
-      display.println("GAS LEVEL: " + String(gasValue) + " - Limiar: " + String(limiarGas));
-      
-      digitalWrite(BUZZER_PIN, LOW);
-    }
-
-}
-
-
-void readTemp() {
-
+void updateSensors() {
+  // Temperatura e umidade
   sensors_event_t hum, tem;
   aht.getEvent(&hum, &tem);
+  temperature = tem.temperature;
+  humidity = hum.relative_humidity;
 
-  Serial.print(F("Humidity: "));
-  Serial.print(hum.relative_humidity);
-  Serial.print(F("%  Temperature: "));
-  Serial.print(tem.temperature);
-  Serial.print(F("°C "));
+  // Gás
+  gasValue = analogRead(MQ9_ANALOG);
 
+  // Buzzer
+  if (gasValue > limiarGas) {
+    digitalWrite(BUZZER_PIN, HIGH);
+  } else {
+    digitalWrite(BUZZER_PIN, LOW);
+  }
 
+  Serial.print("Temp: "); Serial.print(temperature);
+  Serial.print(" | Hum: "); Serial.print(humidity);
+  Serial.print(" | Gas: "); Serial.println(gasValue);
+
+  // sendDataToServer();
+}
+
+void updateDisplay() {
   display.clearDisplay();
-
-  display.setTextSize(2);
+  display.setTextSize(1);
   display.setTextColor(WHITE);
-  display.setCursor(0, 5);
-  display.println("T: " + String(tem.temperature) + " C");
 
-  display.setTextSize(1.9);
-  display.setCursor(0, 25);
-  display.println("H: " + String(hum.relative_humidity));
+  // Linha 1: Temperatura e Umidade
+  display.setCursor(0, 0);
+  display.print("T:");
+  display.print(temperature, 1);
+  display.print("C");
 
-  display.display(); 
+  display.setCursor(64, 0);
+  display.print("H:");
+  display.print(humidity, 0);
+  display.print("%");
 
-  
+  // Linha 2: Gás
+  display.setCursor(0, 12);
+  display.print("Gas: ");
+  display.print(gasValue);
+  display.print(" / ");
+  display.print(limiarGas);
+
+  // Gráfico de barra horizontal
+  int barWidth = map(gasValue, 220, limiarGas, 0, 90);
+  barWidth = constrain(barWidth, 0, 90);
+  display.drawRect(30, 24, 90, 6, WHITE); // moldura
+  display.fillRect(31, 25, barWidth, 4, WHITE);
+
+  // Alerta visual
+  if (gasValue > limiarGas) {
+    display.clearDisplay();
+    display.setTextSize(1.9);
+    display.setCursor(0, 5);
+    display.print("! ALERTA DE GAS !");
+  }
+
+  display.display();
 }
 
 void fillDisplay(void) {
@@ -145,17 +153,45 @@ void fillDisplay(void) {
     display.display();
     delay(2);
   }
-} 
-
-void printStartData(String data)
-{
-  //delay(2000);
-  display.clearDisplay();
-
-  display.setTextSize(1.9);
-  display.setTextColor(WHITE);
-  display.setCursor(0, 5);
-  display.println(data);
-
-  display.display(); 
 }
+
+void sendDataToServerPOST() {
+  if (WiFi.status() == WL_CONNECTED) {
+    std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
+    client->setInsecure();
+    HTTPClient http;
+
+    String url = "https://home.byteslivres.com.br/api/data";
+    http.begin(*client, url);
+
+    // Define cabeçalho para JSON
+    http.addHeader("Content-Type", "application/json");
+
+    // Cria JSON com os dados
+    String jsonPayload = "{";
+    jsonPayload += "\"temperature\":" + String(temperature, 1) + ",";
+    jsonPayload += "\"humidity\":" + String(humidity, 1) + ",";
+    jsonPayload += "\"gas\":" + String(gasValue);
+    jsonPayload += "}";
+
+    Serial.println("Enviando JSON:");
+    Serial.println(jsonPayload);
+
+    // Envia POST com o JSON
+    int httpCode = http.POST(jsonPayload);
+
+    // Verifica resposta
+    if (httpCode > 0) {
+      Serial.printf("Código de resposta: %d\n", httpCode);
+      String response = http.getString();
+      Serial.println("Resposta: " + response);
+    } else {
+      Serial.printf("Erro na requisição: %s\n", http.errorToString(httpCode).c_str());
+    }
+
+    http.end(); // Libera recursos
+  } else {
+    Serial.println("WiFi não conectado");
+  }
+}
+
