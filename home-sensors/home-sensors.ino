@@ -13,7 +13,7 @@ extern const char* password;
 
 WiFiServer server(80); 
 
-#define BUZZER_PIN 2
+#define BUZZER_PIN 14
 #define MQ9_ANALOG A0
 
 #define SCREEN_WIDTH 128
@@ -62,6 +62,8 @@ void setup() {
   Serial.println("AHT10 e OLED iniciados com sucesso!");
 
   pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
+
   pinMode(MQ9_ANALOG, INPUT);
 
   ESP.wdtEnable(10000); // watchdog de 10s
@@ -144,7 +146,6 @@ void updateDisplay() {
 }
 
 void fillDisplay(void) {
-
   display.clearDisplay();
   for (int j = 0; j < 63; j++) {
     for (int i = 0; i < 127; i++) {
